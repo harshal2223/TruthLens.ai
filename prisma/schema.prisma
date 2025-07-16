@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  name     String?
+  articles Article[]
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  coverUrl    String?
+  contentMd   String
+  readTime    Int
+  verifiedPct Int      @default(0)
+  authorId    Int
+  createdAt   DateTime @default(now())
+  author      User     @relation(fields: [authorId], references: [id])
+  tags        Tag[]    @relation("ArticleTags")
+}
+
+model Tag {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  articles Article[] @relation("ArticleTags")
+}
+
+model FactCheck {
+  id               String   @id
+  claim            String
+  verdict          String
+  confidenceScore  Int
+  summary          String
+  detailedAnalysis String
+  keyPoints        String
+  context          String
+  timeline         String   // JSON
+  sources          String   // JSON
+  relatedClaims    String   // JSON
+  expertOpinions   String   // JSON
+  sessionId        String
+  userId           String?
+  keywords         String   // JSON array
+  entities         String   // JSON array
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  session FactCheckSession @relation(fields: [sessionId], references: [id])
+}
+
+model FactCheckSession {
+  id        String      @id
+  userId    String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  claims    FactCheck[]
+}
